@@ -20,9 +20,11 @@ What the entrypoint does, in order:
    namespace survives, joined containers keep their network.
 
 The container never exits because of VPN trouble; the session lives in
-`/root/.local/share/adguardvpn-cli`, together with a generated `machine-id`
-the CLI needs to recognise it. Give the container a fixed `hostname:` too:
-the session is also bound to it.
+`/root/.local/share/adguardvpn-cli`. The CLI binds it to the host identity,
+so a restarted or recreated container must look the same: the image keeps a
+generated `machine-id` in the data directory, and the compose file must pin
+`hostname:` and `mac_address:` (Docker picks a random MAC per start, and that
+alone logs you out).
 
 ## Run
 
@@ -31,6 +33,7 @@ services:
   adguardvpn:
     image: ghcr.io/ilnazziiazi/adguard-cli-docker:1.8.2-3
     hostname: adguardvpn
+    mac_address: 02:ad:9a:7d:00:01
     cap_add: [NET_ADMIN]
     devices: [/dev/net/tun]
     sysctls:
