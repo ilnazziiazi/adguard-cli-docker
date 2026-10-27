@@ -9,7 +9,14 @@ set -euo pipefail
 : "${VPN_PROBE_FAILURES:=4}"   # consecutive failures before a reconnect
 
 cli=adguardvpn-cli
+data=/root/.local/share/adguardvpn-cli
 log() { echo "[entrypoint] $*"; }
+
+# The CLI ties its stored session to /etc/machine-id, which containers lack.
+# Keep one next to the session so a recreated container still owns it.
+mkdir -p "$data"
+[[ -s $data/machine-id ]] || tr -dc 'a-f0-9' </dev/urandom | head -c 32 >"$data/machine-id"
+cp "$data/machine-id" /etc/machine-id
 
 # Kill switch. Only root may open connections outside the tunnel: the VPN
 # service itself and Docker's embedded DNS forwarder. Everything else sharing
@@ -50,9 +57,11 @@ trap stop TERM INT
 while true; do
   # `login` prints the authorization link (docker logs) and waits for it to
   # be used; the link expires after 30 minutes, then a new one is printed.
+  # Its menu polls stdin: on /dev/null (EOF) it spins and floods app.log, so
+  # give it a pipe that stays open.
   while [[ $($cli status 2>&1) == *"not logged in"* ]]; do
     log "not logged in: open the link below in a browser"
-    $cli login </dev/null || true
+    $cli login < <(sleep 1900) || true
   done
 
   # --boot: the CLI itself retries the connection indefinitely.

@@ -18,14 +18,17 @@ What the entrypoint does, in order:
    namespace survives, joined containers keep their network.
 
 The container never exits because of VPN trouble; the session lives in
-`/root/.local/share/adguardvpn-cli`.
+`/root/.local/share/adguardvpn-cli`, together with a generated `machine-id`
+the CLI needs to recognise it. Give the container a fixed `hostname:` too:
+the session is also bound to it.
 
 ## Run
 
 ```yaml
 services:
   adguardvpn:
-    image: ghcr.io/ilnazziiazi/adguard-cli-docker:1.8.2-1
+    image: ghcr.io/ilnazziiazi/adguard-cli-docker:1.8.2-2
+    hostname: adguardvpn
     cap_add: [NET_ADMIN]
     devices: [/dev/net/tun]
     sysctls:
