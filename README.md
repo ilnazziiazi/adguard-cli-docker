@@ -11,8 +11,10 @@ What the entrypoint does, in order:
    `tun0`, plus connections opened by root (the VPN service itself and
    Docker's DNS forwarder). Containers sharing the namespace must run as a
    non-root uid, otherwise they bypass the switch.
-2. Prints the authorization link (`docker logs`) until the session exists,
-   then runs `adguardvpn-cli connect --no-fork --boot`.
+2. Applies the CLI configuration once (marker `configured` in the data
+   directory: `config set-*` would wipe the stored session), then runs
+   `adguardvpn-cli connect --no-fork --boot`; if that says "not logged in",
+   it prints the authorization link (`docker logs`) and waits.
 3. Probes `https://1.1.1.1/` through `tun0` every 30 s. After 4 consecutive
    failures it restarts the VPN service **inside the container**: the
    namespace survives, joined containers keep their network.
@@ -27,7 +29,7 @@ the session is also bound to it.
 ```yaml
 services:
   adguardvpn:
-    image: ghcr.io/ilnazziiazi/adguard-cli-docker:1.8.2-2
+    image: ghcr.io/ilnazziiazi/adguard-cli-docker:1.8.2-3
     hostname: adguardvpn
     cap_add: [NET_ADMIN]
     devices: [/dev/net/tun]

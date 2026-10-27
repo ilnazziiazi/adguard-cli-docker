@@ -1,6 +1,6 @@
 IMAGE       ?= ghcr.io/ilnazziiazi/adguard-cli-docker
 CLI_VERSION ?= 1.8.2
-BUILD       ?= 2
+BUILD       ?= 3
 TAG          = $(CLI_VERSION)-$(BUILD)
 
 # gaia is amd64; the build host may not be.
